@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from concurrent.futures import Future, ThreadPoolExecutor
+from functools import cached_property
 from typing import Any, Self
 
 import orjson
@@ -66,25 +67,21 @@ class LeapQCDLSimulator:
 
     @property
     def default_solver(self) -> dict[str, str]:
-        """dict: Features used to select the latest accessible QCDL software solver."""
+        """Features used to select the latest accessible QCDL software solver."""
         return dict(supported_problem_types__contains='qcdl',
                     category='software-gate',
                     order_by='-properties.version')
 
-    @property
+    @cached_property
     def properties(self) -> dict[str, Any]:
         """Solver properties as returned by a :term:`SAPI` query.
 
         Solver properties are dependent on the selected solver and subject to
         change; for example, new features may add properties.
         """
-        try:
-            return self._properties
-        except AttributeError:
-            self._properties = properties = self.solver.properties.copy()
-            return properties
+        return self.solver.properties.copy()
 
-    @property
+    @cached_property
     def parameters(self) -> dict[str, list[str]]:
         """Supported parameters.
 
@@ -94,14 +91,10 @@ class LeapQCDLSimulator:
         Solver parameters are dependent on the selected solver and subject to
         change; for example, new features may add parameters.
         """
-        try:
-            return self._parameters
-        except AttributeError:
-            parameters = {param: ['parameters']
-                          for param in self.properties['parameters']}
-            parameters.update(label=[])
-            self._parameters = parameters
-            return parameters
+        parameters = {param: ['parameters']
+                      for param in self.properties['parameters']}
+        parameters.update(label=[])
+        return parameters
 
     def __init__(self, **config):
         r"""Initialize the simulator client instance.
