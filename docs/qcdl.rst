@@ -17,6 +17,11 @@ Classes
     :show-inheritance:
     :inherited-members:
 
+.. autoclass:: LeapQCDLSimulator
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
 Utilities
 =========
 
