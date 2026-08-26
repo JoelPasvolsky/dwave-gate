@@ -47,7 +47,7 @@ that supports QCDL and submit the QCDL program via ``run``:
 
     simulator = LeapQCDLSimulator()
     future = simulator.run(qcdl_program, shots=3)
-    result = future.result()
+    result = future.result().result
 
 Access measurements and sample counts by calling 
 ``result.measurements`` or ``result.get_counts()`` respectively.

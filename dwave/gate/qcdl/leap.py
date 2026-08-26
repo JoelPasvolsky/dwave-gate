@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import cached_property
-from typing import Any, Self
+from typing import Any, NamedTuple, Self
 
 import orjson
 from dwave.cloud.client import Client
@@ -58,7 +58,7 @@ class LeapQCDLSimulator:
 
             simulator = LeapQCDLSimulator()
             future = simulator.run(qcdl_program, shots=100)
-            result = future.result()
+            result = future.result().result
 
         Access measurements and sample counts by calling
         ``result.measurements`` or ``result.get_counts()`` respectively.
@@ -163,10 +163,18 @@ class LeapQCDLSimulator:
         # raise exceptions from the runtime context as they're not handled here
         return None
 
-    def run(self, qcdl: QCDLProgram | Mapping[str, Any], **params) -> Future[Result]:
+    class RunResult(NamedTuple):
+        """:meth:`~dwave.gate.qcdl.leap.LeapQCDLSimulator.run` method future result
+        """
+        result: Result
+        # note: use a string annotation to avoid dependency on dwave-system
+        info: 'dwave.system.samplers.ResultInfoDict'
+
+    def run(self, qcdl: QCDLProgram | Mapping[str, Any], **params) -> Future[RunResult]:
         """Run the :term:`QCDL` program using the selected Leap simulator,
-        and return the :class:`~dwave.gate.results.Result` in a
-        class:`~concurrent.futures.Future`.
+        and return the :class:`~dwave.gate.results.Result`, alongside the SAPI
+        job metadata, both wrapped in a :class:`~dwave.gate.qcdl.leap.LeapQCDLSimulator.RunResult`
+        and returned in a class:`~concurrent.futures.Future`.
 
         Args:
             qcdl:
@@ -181,9 +189,18 @@ class LeapQCDLSimulator:
         response = self.solver.sample_qcdl(qcdl, **params)
 
         def decode():
+            # decode/construct the QCDL result
             answer = orjson.loads(response.answer_data.read())
-            return Result(**answer)
+            result = Result(**answer)
 
-        result = self._executor.submit(decode)
+            # collect metadata of interest
+            info = dict(
+                timing=response.timing.copy(),
+                problem_id=response.id,
+                problem_label=response.label,
+                problem_data_id=response.data_id,
+            )
 
-        return result
+            return LeapQCDLSimulator.RunResult(result, info)
+
+        return self._executor.submit(decode)

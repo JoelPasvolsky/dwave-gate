@@ -115,18 +115,23 @@ class TestLeapQCDLSimulator:
         decode_response.side_effect = mock_decode_response
 
         try:
-            result = simulator.run(program, shots=num_shots)
+            future = simulator.run(program, shots=num_shots)
 
             # low-level sample_problem called with our program and params
             base_sample_problem.assert_called_with(program, label=None, shots=num_shots)
 
             # decoded answer returned in a Future[Result]
-            assert isinstance(result, concurrent.futures.Future)
-            answer = result.result(timeout=10)
-            assert isinstance(answer, Result)
-            assert answer.num_shots == mock_answer['num_shots']
-            assert answer.num_qubits == mock_answer['num_qubits']
-            assert answer.simulated_qcdl == mock_answer['simulated_qcdl']
+            assert isinstance(future, concurrent.futures.Future)
+            runresult = future.result(timeout=10)
+            assert isinstance(runresult, LeapQCDLSimulator.RunResult)
+            result = runresult.result
+            assert isinstance(result, Result)
+            assert result.num_shots == mock_answer['num_shots']
+            assert result.num_qubits == mock_answer['num_qubits']
+            assert result.simulated_qcdl == mock_answer['simulated_qcdl']
+            info = runresult.info
+            assert isinstance(info, dict)
+            assert info['problem_id'] == mock_problem_id
         finally:
             simulator.close()
 
