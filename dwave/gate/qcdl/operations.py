@@ -314,7 +314,6 @@ def y(qubit: QCDLModule) -> None:
 
 def sy(qubit: QCDLModule) -> None:
     r"""SQRT of Y gate.
-    .. todo:: it's not a qiskit gate (comment from @qci-amos)
 
     Args:
         qubit: Qubit on which to apply the gate.
@@ -338,7 +337,6 @@ def sy(qubit: QCDLModule) -> None:
 
 def sydg(qubit: QCDLModule) -> None:
     r"""SQRT of Y_adjoint gate.
-    .. todo:: it's not a qiskit gate (comment from @qci-amos)
 
     Args:
         qubit: Qubit on which to apply the gate.
