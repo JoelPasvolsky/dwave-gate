@@ -452,7 +452,6 @@ result distributions. It supports options for renormalizing distributions,
 ignoring erasures, and others.
 
 .. testcode::
-    :skipif: True
 
     from dwave.gate.results import YieldHandling
     half_splats = {"00": 100, "0*": 100}
