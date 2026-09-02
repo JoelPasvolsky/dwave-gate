@@ -19,13 +19,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import cached_property
-from typing import Any, NamedTuple, Self
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 
 import orjson
 from dwave.cloud.client import Client
 
 from dwave.gate.qcdl.qcdl_models import QCDLProgram
-from dwave.gate.results import Result
+
+if TYPE_CHECKING:
+    from dwave.gate.results import Result
 
 __all__ = ['LeapQCDLSimulator']
 
@@ -189,6 +191,9 @@ class LeapQCDLSimulator:
         response = self.solver.sample_qcdl(qcdl, **params)
 
         def decode():
+            # import deferred to avoid a circular import with dwave.gate.results
+            from dwave.gate.results import Result
+
             # decode/construct the QCDL result
             answer = orjson.loads(response.answer_data.read())
             result = Result(**answer)
